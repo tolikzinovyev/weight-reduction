@@ -40,6 +40,7 @@ struct Cli {
   #[arg(long)]
   show_tickets: bool,
 
+  /// Run the solver repeatedly for this long and average the duration.
   #[arg(long, value_parser = humantime::parse_duration, default_value = "0s")]
   measure_duration: Duration,
 }
