@@ -6,8 +6,6 @@ mod deltas_test;
 mod tests;
 mod tickets;
 
-pub mod misc;
-
 pub use bound::bound;
 pub use deltas::generate as generate_deltas;
 #[cfg(test)]

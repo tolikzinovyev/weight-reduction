@@ -47,9 +47,8 @@ impl DP {
   // the configured adversarial tickets target is achieved.
   pub fn apply(mut self, w: u64, t: u64) -> Option<DP> {
     assert!(w > 0);
-    assert!(t > 0);
 
-    if w > self.max_weight {
+    if (w > self.max_weight) || (t == 0) {
       return Some(self);
     }
     let adv_tickets_target = self.dp.capacity();

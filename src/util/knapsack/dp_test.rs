@@ -54,6 +54,21 @@ fn apply_adversarial_tickets_large_weight() {
   let mut dp = DP::new(50, 9).unwrap();
   dp = dp.apply(51, 1).unwrap();
   assert_eq!(0, dp.adversarial_tickets());
+  dp = dp.apply(3, 2).unwrap();
+  assert_eq!(2, dp.adversarial_tickets());
+  dp = dp.apply(51, 1).unwrap();
+  assert_eq!(2, dp.adversarial_tickets());
+}
+
+#[test]
+fn apply_adversarial_tickets_zero_tickets() {
+  let mut dp = DP::new(50, 9).unwrap();
+  dp = dp.apply(1, 0).unwrap();
+  assert_eq!(0, dp.adversarial_tickets());
+  dp = dp.apply(3, 2).unwrap();
+  assert_eq!(2, dp.adversarial_tickets());
+  dp = dp.apply(1, 0).unwrap();
+  assert_eq!(2, dp.adversarial_tickets());
 }
 
 #[test]

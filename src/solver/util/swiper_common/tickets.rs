@@ -20,6 +20,13 @@ impl Tickets {
     self.total += 1;
   }
 
+  pub fn get(&self, index: usize) -> u64 {
+    match self.tickets.get(index) {
+      Some(&x) => x,
+      None => 0,
+    }
+  }
+
   pub fn data(&self) -> &[u64] {
     &self.tickets
   }

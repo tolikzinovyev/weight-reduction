@@ -36,7 +36,7 @@ proptest! {
   fn against_simple_extended_swiper(input in input()) {
     assert_eq!(
       simple_extended_swiper(input.alpha, input.beta, &input.weights),
-      super::extended_swiper::solve(input.alpha, input.beta, &input.weights),
+      super::super_swiper::solve(input.alpha, input.beta, &input.weights),
     );
   }
 }

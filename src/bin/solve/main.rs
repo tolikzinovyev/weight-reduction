@@ -1,7 +1,7 @@
 use clap::Parser;
 use mimalloc::MiMalloc;
 use solver::{
-  solver::{bruteforce_sorted, extended_swiper, faster_swiper, gcd_wr, swiper},
+  solver::{bruteforce_sorted, faster_swiper, gcd_wr, super_swiper, swiper},
   types::{CompactDisplay, Ratio},
   util::{
     basic::{calc_adv_tickets_target, calc_max_adv_weight},
@@ -19,7 +19,7 @@ enum Algorithm {
   BruteforceSorted,
   Swiper,
   FasterSwiper,
-  ExtendedSwiper,
+  SuperSwiper,
   GcdWr,
 }
 
@@ -56,7 +56,7 @@ fn run(
     Algorithm::BruteforceSorted => bruteforce_sorted::solve,
     Algorithm::Swiper => swiper::solve,
     Algorithm::FasterSwiper => faster_swiper::solve,
-    Algorithm::ExtendedSwiper => extended_swiper::solve,
+    Algorithm::SuperSwiper => super_swiper::solve,
     Algorithm::GcdWr => gcd_wr::solve,
   };
 
