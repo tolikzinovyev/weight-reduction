@@ -9,7 +9,7 @@ Written in Rust.
 
 Example:
 ```
-cargo run --release -- --algorithm faster-swiper --alpha 1/3 --beta 1/2 --weights-path data/algorand.dat
+cargo run --release -- --algorithm super-swiper --alpha 1/3 --beta 1/2 --weights-path data/algorand.dat
 ```
 
 To see all command line flags run:
