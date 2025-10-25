@@ -23,8 +23,8 @@ fn calc_indices_head(tickets_len: usize, deltas: &[usize]) -> Vec<usize> {
   indices_head
 }
 
-// Calculates the DP head and the tail indices to apply in each iteration
-// of the batch. Returns None iff the DP head cannot be constructed which means
+// Calculates the DP data structure with indices applied that are not in `delta`s.
+// Returns None iff the DP head cannot be constructed which means
 // that the current batch should be skipped.
 fn calc_dp_head(
   beta: Ratio,
@@ -33,13 +33,13 @@ fn calc_dp_head(
   deltas: &[usize],
   tickets: &Tickets,
 ) -> Option<DP> {
-  let indices_head = calc_indices_head(tickets.data().len(), deltas);
-
   let mut dp_head = DP::new(
     max_adv_weight,
     calc_adv_tickets_target(beta, tickets.total() + deltas.len() as u64),
   )
   .unwrap();
+
+  let indices_head = calc_indices_head(tickets.data().len(), deltas);
   for index in indices_head {
     dp_head = dp_head.apply(weights[index], tickets.get(index))?;
   }
@@ -47,8 +47,8 @@ fn calc_dp_head(
   Some(dp_head)
 }
 
-// Apply those indices to dp_head that are in add_indices but not in
-// exclude_indices.
+// Apply those indices to dp_head that are in `add_indices` but not in
+// `exclude_indices`.
 fn apply(
   weights: &[u64],
   dp_head: &DP,
@@ -78,8 +78,8 @@ fn update_tickets(deltas: &[usize], tickets: &mut Tickets) {
   }
 }
 
-// Apply `deltas` to provided `tickets`. If after applying
-// some number of deltas a valid ticket assignment is found, returns true with
+// Apply `deltas` to provided `tickets`. If after applying 0 or more
+// deltas, a valid ticket assignment is found, returns true with
 // `tickets` containing the corresponding ticket assignment.
 // Otherwise, returns false with `tickets` containing
 // the new ticket assignment after applying all deltas.
@@ -92,50 +92,62 @@ fn process_batch_recursive(
   dp_head: &DP,
   tickets: &mut Tickets,
 ) -> bool {
-  if deltas.len() == 1 {
-    let index = deltas[0];
-    tickets.update(index);
+  if deltas.is_empty() {
+    // All indices in `deltas` were successfully applied without the adversary
+    // winning. We found a solution.
+    // Sanity check: `dp_head` must have the right target.
     let adv_tickets_target = calc_adv_tickets_target(beta, tickets.total());
-    let dp = dp_head.make_copy(adv_tickets_target).unwrap();
-    return dp.apply(weights[index], tickets.get(index)).is_some();
+    assert!(dp_head.adv_tickets_target() == adv_tickets_target);
+    return true;
   }
 
-  let (deltas_left, deltas_right) = deltas.split_at(deltas.len() / 2);
+  // Number of tickets assignments in the left branch.
+  let left_branch_size = deltas.len().div_ceil(2);
 
-  if let Some(dp) = apply(
-    weights,
-    dp_head,
-    tickets,
-    calc_adv_tickets_target(beta, tickets.total() + deltas_left.len() as u64),
-    deltas_right,
-    deltas_left,
-  ) {
-    if process_batch_recursive(beta, weights, deltas_left, &dp, tickets) {
-      return true;
+  {
+    let (deltas_left, deltas_apply) = deltas.split_at(left_branch_size - 1);
+    if let Some(dp) = apply(
+      weights,
+      dp_head,
+      tickets,
+      calc_adv_tickets_target(beta, tickets.total() + deltas_left.len() as u64),
+      deltas_apply,
+      deltas_left,
+    ) {
+      if process_batch_recursive(beta, weights, deltas_left, &dp, tickets) {
+        return true;
+      }
+    } else {
+      // Apply the left deltas before continuing.
+      update_tickets(deltas_left, tickets);
     }
-  } else {
-    // Apply the left deltas before continuing.
-    update_tickets(deltas_left, tickets);
+    tickets.update(deltas_apply[0]);
   }
 
-  if let Some(dp) = apply(
-    weights,
-    dp_head,
-    tickets,
-    calc_adv_tickets_target(beta, tickets.total() + deltas_right.len() as u64),
-    deltas_left,
-    deltas_right,
-  ) {
-    process_batch_recursive(beta, weights, deltas_right, &dp, tickets)
-  } else {
-    // Apply the rest of the deltas before exiting.
-    update_tickets(deltas_right, tickets);
-    false
+  {
+    let (deltas_apply, deltas_right) = deltas.split_at(left_branch_size);
+    if let Some(dp) = apply(
+      weights,
+      dp_head,
+      tickets,
+      calc_adv_tickets_target(
+        beta,
+        tickets.total() + deltas_right.len() as u64,
+      ),
+      deltas_apply,
+      deltas_right,
+    ) {
+      process_batch_recursive(beta, weights, deltas_right, &dp, tickets)
+    } else {
+      // Apply the rest of the deltas before exiting.
+      update_tickets(deltas_right, tickets);
+      false
+    }
   }
 }
 
-// Apply `deltas` to provided `tickets`. If after applying
-// some number of deltas a valid ticket assignment is found, returns true with
+// Apply `deltas` to provided `tickets`. If after applying 0 or more
+// deltas a valid ticket assignment is found, returns true with
 // `tickets` containing the corresponding ticket assignment.
 // Otherwise, returns false with `tickets` containing
 // the new ticket assignment after applying all deltas.
@@ -167,7 +179,8 @@ pub fn solve(alpha: Ratio, beta: Ratio, weights: &[u64]) -> Vec<u64> {
 
   let mut batch_size: usize = 1;
   loop {
-    let deltas: Vec<_> = (&mut g).take(batch_size).collect();
+    tickets.update(g.next().unwrap());
+    let deltas: Vec<_> = (&mut g).take(batch_size - 1).collect();
 
     let ret =
       process_batch(beta, weights, max_adv_weight, &deltas, &mut tickets);

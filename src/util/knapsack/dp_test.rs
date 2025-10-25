@@ -77,3 +77,9 @@ fn apply_adversarial_tickets_large_ticket() {
   assert!(dp.make_copy(9).unwrap().apply(1, 9).is_none());
   assert!(dp.apply(1, 10).is_none());
 }
+
+#[test]
+fn adv_tickets_target_test() {
+  let dp = DP::new(50, 9).unwrap();
+  assert_eq!(9, dp.adv_tickets_target());
+}

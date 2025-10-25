@@ -94,4 +94,7 @@ impl DP {
     }
     0
   }
+  pub fn adv_tickets_target(&self) -> u64 {
+    self.dp.capacity() as u64
+  }
 }
