@@ -61,7 +61,9 @@ fn apply(
 
   let exclude_indices =
     exclude_indices.iter().copied().collect::<BTreeSet<_>>();
-  for &index in add_indices {
+  let add_indices = add_indices.iter().copied().collect::<BTreeSet<_>>();
+
+  for index in add_indices {
     if !exclude_indices.contains(&index) {
       dp = dp.apply(weights[index], tickets.get(index))?;
     }
